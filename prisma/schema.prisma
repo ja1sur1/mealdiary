@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String               @id @default(cuid())
+  email            String               @unique
+  name             String?
+  phoneNumber      String?
+  phoneVerifiedAt  DateTime?
+  timezone         String
+  meals            Meal[]
+  dailySymptomLogs DailySymptomLog[]
+  reminderSettings ReminderSetting?
+  reminderLogs     ReminderDeliveryLog[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([phoneNumber])
+}
+
+model Meal {
+  id                        String     @id @default(cuid())
+  userId                    String
+  mealDate                  DateTime
+  mealTime                  DateTime
+  source                    MealSource
+  mealType                  MealType
+  outsideLocation           String?
+  outsideLocationNormalized String?
+  notes                     String?
+  user                      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItems                 FoodItem[]
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+
+  @@index([userId, mealDate])
+  @@index([userId, mealDate, mealTime])
+  @@index([userId, mealType, mealDate])
+  @@index([userId, outsideLocationNormalized])
+}
+
+model FoodItem {
+  id             String        @id @default(cuid())
+  mealId         String
+  name           String
+  nameNormalized String
+  sortOrder      Int
+  meal           Meal          @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  tags           FoodItemTag[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([mealId, sortOrder])
+  @@index([nameNormalized])
+}
+
+model FoodItemTag {
+  id            String   @id @default(cuid())
+  foodItemId    String
+  tag           String
+  tagNormalized String
+  foodItem      FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([foodItemId, tagNormalized])
+  @@index([tagNormalized])
+}
+
+model DailySymptomLog {
+  id             String         @id @default(cuid())
+  userId         String
+  logDate        DateTime
+  notes          String?
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symptomEntries SymptomEntry[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([userId, logDate])
+  @@index([userId, logDate])
+}
+
+model SymptomEntry {
+  id                       String          @id @default(cuid())
+  dailySymptomLogId        String
+  symptomName              String
+  symptomNameNormalized    String
+  severity                 Int
+  medicationTaken          Boolean         @default(false)
+  medicationName           String?
+  medicationNameNormalized String?
+  notes                    String?
+  sortOrder                Int
+  dailySymptomLog          DailySymptomLog @relation(fields: [dailySymptomLogId], references: [id], onDelete: Cascade)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  @@index([dailySymptomLogId, sortOrder])
+  @@index([symptomNameNormalized])
+  @@index([medicationNameNormalized])
+}
+
+model ReminderSetting {
+  id                String                @id @default(cuid())
+  userId            String                @unique
+  smsEnabled        Boolean               @default(false)
+  phoneNumber       String?
+  timezone          String
+  dailyReminderTime DateTime
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveryLogs      ReminderDeliveryLog[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@index([smsEnabled, timezone])
+}
+
+model ReminderDeliveryLog {
+  id                 String                 @id @default(cuid())
+  userId             String
+  reminderSettingsId String
+  scheduledFor       DateTime
+  deliveryType       ReminderDeliveryType
+  status             ReminderDeliveryStatus
+  providerMessageId  String?
+  providerError      String?
+  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminderSettings   ReminderSetting        @relation(fields: [reminderSettingsId], references: [id], onDelete: Cascade)
+  createdAt          DateTime               @default(now())
+
+  @@index([userId, scheduledFor])
+  @@index([status, scheduledFor])
+}
+
+model PresetSymptom {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  nameNormalized String   @unique
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PresetMedication {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  nameNormalized String   @unique
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PresetFoodTag {
+  id            String   @id @default(cuid())
+  tag           String   @unique
+  tagNormalized String   @unique
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum MealSource {
+  HOME_COOKED
+  OUTSIDE
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  OTHER
+}
+
+enum ReminderDeliveryType {
+  DAILY
+}
+
+enum ReminderDeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+}
