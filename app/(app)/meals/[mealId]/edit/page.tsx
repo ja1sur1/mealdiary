@@ -3,7 +3,7 @@ import { MealForm } from "@/components/forms/meal-form";
 import { PageHeader } from "@/components/page-header";
 import { updateMealAction } from "@/app/server-actions";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { presetFoodTags } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function EditMealPage({
   params: Promise<{ mealId: string }>;
 }) {
   const { mealId } = await params;
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   const [tagPresets, meal] = await Promise.all([
     db.presetFoodTag.findMany({

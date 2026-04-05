@@ -2,10 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createSession, deleteCurrentSession, hashPassword, verifyPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { parseFoodsFromFormData, parseSymptomsFromFormData } from "@/lib/form-parsers";
-import { mealFormSchema, reminderSettingsSchema, symptomLogSchema } from "@/lib/validations";
+import {
+  mealFormSchema,
+  reminderSettingsSchema,
+  signInSchema,
+  signUpSchema,
+  symptomLogSchema
+} from "@/lib/validations";
 import {
   cleanOptionalString,
   normalizeValue,
@@ -40,6 +47,140 @@ async function validateSymptomForm(formData: FormData) {
   return symptomLogSchema.safeParse(payload);
 }
 
+export async function signUpAction(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const result = signUpSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    timezone: formData.get("timezone"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword")
+  });
+
+  if (!result.success) {
+    return {
+      status: "error",
+      message: "Please fix the highlighted fields and try again.",
+      fieldErrors: issuesToFieldErrors(result.error.issues)
+    };
+  }
+
+  const existingUser = await db.user.findUnique({
+    where: {
+      email: result.data.email
+    }
+  });
+
+  if (existingUser?.passwordHash) {
+    return {
+      status: "error",
+      message: "An account already exists for that email address.",
+      fieldErrors: {
+        email: ["Use a different email address or sign in instead."]
+      }
+    };
+  }
+
+  const passwordHash = await hashPassword(result.data.password);
+  const userData = {
+    name: result.data.name?.trim() ? result.data.name.trim() : undefined,
+    email: result.data.email,
+    timezone: result.data.timezone,
+    passwordHash
+  };
+
+  let user;
+
+  if (existingUser) {
+    user = await db.user.update({
+      where: {
+        id: existingUser.id
+      },
+      data: userData
+    });
+  } else {
+    const [passwordUserCount, legacyUsers] = await Promise.all([
+      db.user.count({
+        where: {
+          passwordHash: {
+            not: null
+          }
+        }
+      }),
+      db.user.findMany({
+        where: {
+          passwordHash: null
+        },
+        orderBy: {
+          createdAt: "asc"
+        },
+        take: 2
+      })
+    ]);
+
+    if (passwordUserCount === 0 && legacyUsers.length === 1) {
+      user = await db.user.update({
+        where: {
+          id: legacyUsers[0].id
+        },
+        data: userData
+      });
+    } else {
+      user = await db.user.create({
+        data: userData
+      });
+    }
+  }
+
+  await createSession(user.id);
+  redirect("/");
+}
+
+export async function signInAction(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const result = signInSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password")
+  });
+
+  if (!result.success) {
+    return {
+      status: "error",
+      message: "Enter your email and password to continue.",
+      fieldErrors: issuesToFieldErrors(result.error.issues)
+    };
+  }
+
+  const user = await db.user.findUnique({
+    where: {
+      email: result.data.email
+    }
+  });
+
+  if (!user?.passwordHash || !(await verifyPassword(result.data.password, user.passwordHash))) {
+    return {
+      status: "error",
+      message: "That email and password combination was not recognized.",
+      fieldErrors: {
+        email: ["Check your credentials and try again."],
+        password: ["Check your credentials and try again."]
+      }
+    };
+  }
+
+  await createSession(user.id);
+  redirect("/");
+}
+
+export async function signOutAction() {
+  await deleteCurrentSession();
+  redirect("/sign-in");
+}
+
 export async function createMealAction(
   _prevState: FormState,
   formData: FormData
@@ -54,7 +195,7 @@ export async function createMealAction(
     };
   }
 
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const outsideLocation = cleanOptionalString(formData.get("outsideLocation"));
   const notes = cleanOptionalString(formData.get("notes"));
 
@@ -104,7 +245,7 @@ export async function updateMealAction(
     };
   }
 
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const meal = await db.meal.findFirst({
     where: {
       id: mealId,
@@ -169,7 +310,7 @@ export async function createSymptomLogAction(
     };
   }
 
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   await db.dailySymptomLog.upsert({
     where: {
@@ -234,7 +375,7 @@ export async function updateSymptomLogAction(
     };
   }
 
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const symptomLog = await db.dailySymptomLog.findFirst({
     where: {
       id: symptomLogId,
@@ -299,7 +440,7 @@ export async function updateSymptomLogAction(
 }
 
 export async function deleteMealAction(mealId: string) {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   await db.meal.deleteMany({
     where: {
@@ -314,7 +455,7 @@ export async function deleteMealAction(mealId: string) {
 }
 
 export async function deleteSymptomLogAction(symptomLogId: string) {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   await db.dailySymptomLog.deleteMany({
     where: {
@@ -341,7 +482,7 @@ export async function saveReminderSettingsAction(formData: FormData) {
     throw new Error("Reminder settings are invalid.");
   }
 
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   await db.user.update({
     where: { id: user.id },

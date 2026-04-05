@@ -11,9 +11,11 @@ model User {
   id               String               @id @default(cuid())
   email            String               @unique
   name             String?
+  passwordHash     String?
   phoneNumber      String?
   phoneVerifiedAt  DateTime?
   timezone         String
+  sessions         Session[]
   meals            Meal[]
   dailySymptomLogs DailySymptomLog[]
   reminderSettings ReminderSetting?
@@ -22,6 +24,19 @@ model User {
   updatedAt        DateTime             @updatedAt
 
   @@index([phoneNumber])
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  sessionTokenHash String   @unique
+  expiresAt        DateTime
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
 }
 
 model Meal {

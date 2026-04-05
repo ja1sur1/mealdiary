@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { deleteMealAction, deleteSymptomLogAction } from "@/app/server-actions";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ type HistoryGroup = {
 };
 
 export default async function HistoryPage() {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const [meals, symptomLogs] = await Promise.all([
     db.meal.findMany({
       where: { userId: user.id },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import {
   buildDashboardStats,
   buildMealTypeChartRows,
@@ -19,7 +19,7 @@ import { PageHeader } from "@/components/page-header";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const todayString = getCurrentDateString(user.timezone);
   const todayDate = parseDateOnlyString(todayString);
   const { monthStart, monthEnd } = getMonthBounds(todayString);

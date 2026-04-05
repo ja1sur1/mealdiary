@@ -3,7 +3,7 @@ import { SymptomForm } from "@/components/forms/symptom-form";
 import { PageHeader } from "@/components/page-header";
 import { updateSymptomLogAction } from "@/app/server-actions";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { presetMedications, presetSymptoms } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function EditSymptomLogPage({
   params: Promise<{ symptomLogId: string }>;
 }) {
   const { symptomLogId } = await params;
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   const [commonSymptoms, commonMedications, symptomLog] = await Promise.all([
     db.presetSymptom.findMany({

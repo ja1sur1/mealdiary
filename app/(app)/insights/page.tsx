@@ -9,13 +9,13 @@ import {
   buildTopTags
 } from "@/lib/analytics";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { formatMonthLabel, getCurrentDateString, getMonthBounds } from "@/lib/date-utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function InsightsPage() {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const todayString = getCurrentDateString(user.timezone);
   const { monthStart, monthEnd, month, year } = getMonthBounds(todayString);
 

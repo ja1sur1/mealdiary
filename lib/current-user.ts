@@ -1,23 +1,24 @@
-import { db } from "@/lib/db";
-
-const DEFAULT_USER = {
-  email: "demo@diet-tracker.local",
-  name: "Demo User",
-  timezone: "America/Los_Angeles"
-};
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/auth";
 
 export async function getCurrentUser() {
-  const existingUser = await db.user.findFirst({
-    orderBy: {
-      createdAt: "asc"
-    }
-  });
+  return getSessionUser();
+}
 
-  if (existingUser) {
-    return existingUser;
+export async function requireCurrentUser() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/sign-in");
   }
 
-  return db.user.create({
-    data: DEFAULT_USER
-  });
+  return user;
+}
+
+export async function requireSignedOutUser() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect("/");
+  }
 }
