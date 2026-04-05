@@ -8,6 +8,15 @@ function normalize(value: string) {
 }
 
 async function main() {
+  await prisma.signupSecret.upsert({
+    where: { code: "ROSELEAF" },
+    update: { isActive: true },
+    create: {
+      code: "ROSELEAF",
+      isActive: true
+    }
+  });
+
   await Promise.all(
     presetSymptoms.map((name) =>
       prisma.presetSymptom.upsert({

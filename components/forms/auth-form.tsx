@@ -67,6 +67,19 @@ export function AuthForm({
       {isSignUp ? (
         <>
           <div className="field">
+            <label htmlFor="signupCode">Signup Code</label>
+            <input
+              autoComplete="off"
+              id="signupCode"
+              name="signupCode"
+              required
+              type="password"
+            />
+            <div className="hint">A valid signup code is required to create an account.</div>
+            <FieldError errors={state.fieldErrors?.signupCode} />
+          </div>
+
+          <div className="field">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               autoComplete="new-password"

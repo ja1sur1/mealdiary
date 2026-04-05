@@ -73,6 +73,7 @@ export const signUpSchema = z
   .object({
     name: z.string().trim().max(80, "Use 80 characters or fewer.").optional(),
     email: emailSchema,
+    signupCode: z.string().trim().min(1, "Enter the signup code."),
     timezone: z.string().trim().min(1, "Choose a timezone."),
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Confirm your password.")

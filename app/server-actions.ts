@@ -54,6 +54,7 @@ export async function signUpAction(
   const result = signUpSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
+    signupCode: formData.get("signupCode"),
     timezone: formData.get("timezone"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword")
@@ -79,6 +80,23 @@ export async function signUpAction(
       message: "An account already exists for that email address.",
       fieldErrors: {
         email: ["Use a different email address or sign in instead."]
+      }
+    };
+  }
+
+  const signupSecret = await db.signupSecret.findFirst({
+    where: {
+      code: result.data.signupCode,
+      isActive: true
+    }
+  });
+
+  if (!signupSecret) {
+    return {
+      status: "error",
+      message: "That signup code is not valid.",
+      fieldErrors: {
+        signupCode: ["Enter a valid signup code to create an account."]
       }
     };
   }
