@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { updateMealAction } from "@/app/server-actions";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
+import { presetFoodTags } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ export default async function EditMealPage({
         initialOutsideLocation={meal.outsideLocation ?? ""}
         initialSource={meal.source}
         initialTime={meal.mealTime.toISOString().slice(11, 16)}
-        recommendedTags={tagPresets.map((tag) => tag.tag)}
+        recommendedTags={tagPresets.length > 0 ? tagPresets.map((tag) => tag.tag) : presetFoodTags}
         submitLabel="Save Changes"
       />
     </main>

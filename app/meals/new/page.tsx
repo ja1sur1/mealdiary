@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { MealForm } from "@/components/forms/meal-form";
 import { db } from "@/lib/db";
+import { presetFoodTags } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function NewMealPage() {
       <MealForm
         initialDate={initialDate}
         initialTime={initialTime}
-        recommendedTags={tagPresets.map((tag) => tag.tag)}
+        recommendedTags={tagPresets.length > 0 ? tagPresets.map((tag) => tag.tag) : presetFoodTags}
       />
     </main>
   );

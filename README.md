@@ -10,10 +10,23 @@ This repository contains the initial app scaffold for the Diet and Symptoms Trac
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env`.
-3. Run `npx prisma generate`.
-4. Run `npx prisma migrate dev`.
-5. Run `npm run prisma:seed`.
-6. Start the app with `npm run dev`.
+3. Set `DATABASE_URL` in `.env` to a valid Postgres connection string.
+4. Run `npm run prisma:generate`.
+5. Run `npm run prisma:push`.
+6. Run `npm run prisma:seed`.
+7. Start the app with `npm run dev`.
+
+Example:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"
+```
+
+## Vercel Deployment Notes
+
+- Set `DATABASE_URL` in Vercel project environment variables.
+- The current Vercel build command uses `prisma db push` because the project does not yet have committed migration files.
+- Do not use a SQLite-style value such as `file:./dev.db` with the current Prisma schema.
 
 ## Current Status
 
@@ -24,4 +37,3 @@ The project currently includes:
 - server action placeholders for mutations
 
 This is a starting point for implementation, not a finished product.
-# mealdiary

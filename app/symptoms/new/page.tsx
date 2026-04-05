@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { SymptomForm } from "@/components/forms/symptom-form";
 import { db } from "@/lib/db";
+import { presetMedications, presetSymptoms } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +26,12 @@ export default async function NewSymptomsPage() {
       />
 
       <SymptomForm
-        commonMedications={commonMedications.map((medication) => medication.name)}
-        commonSymptoms={commonSymptoms.map((symptom) => symptom.name)}
+        commonMedications={
+          commonMedications.length > 0 ? commonMedications.map((medication) => medication.name) : presetMedications
+        }
+        commonSymptoms={
+          commonSymptoms.length > 0 ? commonSymptoms.map((symptom) => symptom.name) : presetSymptoms
+        }
         initialDate={new Date().toISOString().slice(0, 10)}
       />
     </main>

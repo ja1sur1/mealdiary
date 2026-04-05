@@ -1,42 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { presetFoodTags, presetMedications, presetSymptoms } from "../lib/presets";
 
 const prisma = new PrismaClient();
-
-const presetSymptoms = [
-  "Headache",
-  "Nausea",
-  "Bloating",
-  "Acidity",
-  "Stomach Pain",
-  "Fatigue",
-  "Diarrhea"
-];
-
-const presetMedications = [
-  "Advil",
-  "Tylenol",
-  "Nurtec",
-  "Omeprazole",
-  "Famotidine",
-  "Tums"
-];
-
-const presetFoodTags = [
-  "spicy",
-  "mild",
-  "heavy",
-  "light",
-  "oily",
-  "non-oily",
-  "dairy",
-  "gluten",
-  "fried",
-  "sugary",
-  "caffeine",
-  "fermented",
-  "acidic",
-  "large portion"
-];
 
 function normalize(value: string) {
   return value.trim().toLowerCase();

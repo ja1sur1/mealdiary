@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { updateSymptomLogAction } from "@/app/server-actions";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
+import { presetMedications, presetSymptoms } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +54,12 @@ export default async function EditSymptomLogPage({
 
       <SymptomForm
         action={updateSymptomLogAction.bind(null, symptomLog.id)}
-        commonMedications={commonMedications.map((medication) => medication.name)}
-        commonSymptoms={commonSymptoms.map((symptom) => symptom.name)}
+        commonMedications={
+          commonMedications.length > 0 ? commonMedications.map((medication) => medication.name) : presetMedications
+        }
+        commonSymptoms={
+          commonSymptoms.length > 0 ? commonSymptoms.map((symptom) => symptom.name) : presetSymptoms
+        }
         initialDate={symptomLog.logDate.toISOString().slice(0, 10)}
         initialRows={symptomLog.symptomEntries.map((entry) => ({
           name: entry.symptomName,
