@@ -11,7 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+    "vercel-build": "prisma generate && prisma db push && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
@@ -28,10 +28,5 @@
     "prisma": "^6.6.0",
     "tsx": "^4.19.2",
     "typescript": "^5.8.3"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
-  
 }
-
